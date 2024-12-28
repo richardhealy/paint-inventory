@@ -87,6 +87,39 @@
             padding: 8px;
             margin-right: 10px;
         }
+
+        .palette-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .palette-section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            color: #333;
+        }
+
+        .add-to-palette {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .remove-from-palette {
+            background: #f44336;
+        }
+
+        .add-to-palette:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -103,6 +136,11 @@
         <select id="familyFilter">
             <option value="">All Color Families</option>
         </select>
+    </div>
+
+    <div class="palette-section">
+        <h2>My Palette</h2>
+        <div id="paletteGrid" class="color-grid"></div>
     </div>
 
     <div class="color-grid" id="paintGrid"></div>
@@ -197,7 +235,29 @@
             { name: "Woodgrain", brand: "AK Interactive", type: "Base", hex: "#8B4513", family: "Browns", notes: "Wood effect" },
         ];
 
-        function createPaintCard(paint) {
+        let palette = [];
+
+        function togglePaintInPalette(paint) {
+            const index = palette.findIndex(p => p.name === paint.name);
+            if (index === -1) {
+                palette.push(paint);
+            } else {
+                palette.splice(index, 1);
+            }
+            updatePaletteDisplay();
+            filterPaints(); // Refresh main grid to update buttons
+        }
+
+        function updatePaletteDisplay() {
+            const paletteGrid = document.getElementById('paletteGrid');
+            paletteGrid.innerHTML = palette.map(paint => createPaintCard(paint, true)).join('');
+        }
+
+        function createPaintCard(paint, inPalette = false) {
+            const isInPalette = palette.some(p => p.name === paint.name);
+            const buttonClass = isInPalette ? 'remove-from-palette' : '';
+            const buttonText = isInPalette ? 'Remove from Palette' : 'Add to Palette';
+            
             return `
                 <div class="paint-card">
                     <div class="color-swatch" style="background-color: ${paint.hex}"></div>
@@ -210,6 +270,12 @@
                             ${paint.notes ? `<div>Notes: ${paint.notes}</div>` : ''}
                         </div>
                         <span class="brand-tag">${paint.brand}</span>
+                        ${!inPalette ? `
+                            <button class="add-to-palette ${buttonClass}" 
+                                    onclick="togglePaintInPalette(${JSON.stringify(paint)})">
+                                ${buttonText}
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
