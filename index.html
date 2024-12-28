@@ -234,7 +234,12 @@
             { name: "Wrathbone", brand: "Citadel", type: "Base", hex: "#A1957A", family: "Whites", notes: "Bone off colour white" },
             { name: "Woodgrain", brand: "AK Interactive", type: "Base", hex: "#8B4513", family: "Browns", notes: "Wood effect" },
         ].sort((a, b) => {
-            // Convert hex to RGB for better color sorting
+            // First sort by color family
+            if (a.family !== b.family) {
+                return a.family.localeCompare(b.family);
+            }
+            
+            // Within same family, sort by hex color
             const hexToRgb = hex => {
                 // Handle 'Clear' or other non-hex values
                 if (hex === 'Clear' || hex === 'Grey') return [255, 255, 255];
