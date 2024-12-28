@@ -104,13 +104,22 @@
         }
 
         .add-to-palette {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
             margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .add-to-palette:hover {
+            background: #f0f0f0;
         }
 
         .remove-from-palette {
@@ -280,8 +289,6 @@
 
         function createPaintCard(paint, inPalette = false) {
             const isInPalette = palette.some(p => p.name === paint.name);
-            const buttonClass = isInPalette ? 'remove-from-palette' : '';
-            const buttonText = isInPalette ? 'Remove from Palette' : 'Add to Palette';
             
             return `
                 <div class="paint-card">
@@ -295,17 +302,10 @@
                             ${paint.notes ? `<div>Notes: ${paint.notes}</div>` : ''}
                         </div>
                         <span class="brand-tag">${paint.brand}</span>
-                        ${!inPalette ? `
-                            <button class="add-to-palette ${buttonClass}" 
-                                    onclick="togglePaintInPalette(${JSON.stringify(paint).replace(/"/g, '&quot;')})">
-                                ${buttonText}
-                            </button>
-                        ` : `
-                            <button class="add-to-palette remove-from-palette" 
-                                    onclick="togglePaintInPalette(${JSON.stringify(paint).replace(/"/g, '&quot;')})">
-                                Remove from Palette
-                            </button>
-                        `}
+                        <button class="add-to-palette" 
+                                onclick="togglePaintInPalette(${JSON.stringify(paint).replace(/"/g, '&quot;')})">
+                            ${isInPalette ? '−' : '+'}
+                        </button>
                     </div>
                 </div>
             `;
