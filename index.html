@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Inventory</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-input {
+            padding: 8px;
+            width: 200px;
+            margin-right: 10px;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .paint-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .paint-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .color-swatch {
+            height: 80px;
+            width: 100%;
+            border-bottom: 1px solid #eee;
+        }
+
+        .paint-info {
+            padding: 15px;
+        }
+
+        .paint-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .paint-details {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .brand-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        select {
+            padding: 8px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Paint Inventory</h1>
+
+    <div class="controls">
+        <input type="text" class="search-input" placeholder="Search paints...">
+        <select id="brandFilter">
+            <option value="">All Brands</option>
+        </select>
+        <select id="typeFilter">
+            <option value="">All Types</option>
+        </select>
+        <select id="familyFilter">
+            <option value="">All Color Families</option>
+        </select>
+    </div>
+
+    <div class="color-grid" id="paintGrid"></div>
+
+    <script>
+        const paints = [
+            { name: "Abaddon Black", brand: "Citadel", type: "Base/Air", hex: "#000000", family: "Blacks/Greys", notes: "Pure black (2 bottles)" },
+            { name: "Administratum Grey", brand: "Citadel", type: "Layer", hex: "#A9A9A9", family: "Blacks/Greys", notes: "Light grey" },
+            { name: "Aggaros Dunes", brand: "Citadel", type: "Shade", hex: "#C19A6B", family: "Browns", notes: "Sand wash" },
+            { name: "Agrax Earthshade", brand: "Citadel", type: "Shade", hex: "#3B2F2F", family: "Technical", notes: "Brown wash" },
+            { name: "Ash Grey", brand: "AK Interactive", type: "Base", hex: "#B2BEB5", family: "Blacks/Greys", notes: "Cool grey" },
+            { name: "Athonian Camoshade", brand: "Citadel", type: "Shade", hex: "#4A5D23", family: "Greens", notes: "Green wash" },
+            { name: "Balor Brown", brand: "Citadel", type: "Layer", hex: "#CD853F", family: "Browns", notes: "Medium brown" },
+            { name: "Basilicanum Grey", brand: "Citadel", type: "Contrast", hex: "#4D4D4D", family: "Blacks/Greys", notes: "Grey shade" },
+            { name: "Black Templar", brand: "Citadel", type: "Contrast", hex: "#1C1C1C", family: "Blacks/Greys", notes: "Black shade" },
+            { name: "Blood Angels Red", brand: "Citadel", type: "Contrast", hex: "#8B0000", family: "Reds", notes: "Bright red" },
+            { name: "Blood for the Blood God", brand: "Citadel", type: "Technical", hex: "#8B0000", family: "Reds", notes: "Glossy blood effect" },
+            { name: "Brass Scorpion", brand: "Citadel", type: "Layer", hex: "#B87333", family: "Metallics", notes: "Reddish brass" },
+            { name: "Bronze", brand: "AK Interactive", type: "Metallic", hex: "#CD7F32", family: "Metallics", notes: "Bronze" },
+            { name: "Caliban Green", brand: "Citadel", type: "Base", hex: "#004225", family: "Greens", notes: "Dark green" },
+            { name: "Canvas Tone", brand: "AK Interactive", type: "Base", hex: "#D2B48C", family: "Browns", notes: "Base tan" },
+            { name: "Corvus Black", brand: "Citadel", type: "Base", hex: "#1A1A1A", family: "Blacks/Greys", notes: "Deep black" },
+            { name: "Cygor Brown", brand: "Citadel", type: "Contrast", hex: "#3B2F2F", family: "Browns", notes: "Dark brown" },
+            { name: "Dark Oath Flesh", brand: "Citadel", type: "Contrast", hex: "#C4A484", family: "Browns", notes: "Dark flesh" },
+            { name: "Decomposed Flesh", brand: "AK Interactive", type: "Base", hex: "#C4A484", family: "Browns", notes: "Zombie flesh" },
+            { name: "Deep Yellow", brand: "AK Interactive", type: "Base", hex: "#E2C74B", family: "Yellow", notes: "Yellow base" },
+            { name: "Dorthor Brown", brand: "Citadel", type: "Layer", hex: "#8B4513", family: "Browns", notes: "Rich brown" },
+            { name: "Druchii Violet", brand: "Citadel", type: "Shade", hex: "#4B0082", family: "Purples", notes: "Purple wash" },
+            { name: "Dreadful Visage", brand: "Citadel", type: "Contrast", hex: "#B4A2AF", family: "Purples", notes: "Purple contrast" },
+            { name: "Dryad Bark", brand: "Citadel", type: "Base", hex: "#5C4033", family: "Browns", notes: "Dark brown" },
+            { name: "Eshin Grey", brand: "Citadel", type: "Layer", hex: "#4A4A4A", family: "Blacks/Greys", notes: "Dark grey" },
+            { name: "Flayed One Flesh", brand: "Citadel", type: "Layer", hex: "#A9986D", family: "Yellow", notes: "Pale yellow flesh" },
+            { name: "Flesh Tearers Red", brand: "Citadel", type: "Contrast", hex: "#800000", family: "Reds", notes: "Deep red" },
+            { name: "Fluorescent Green", brand: "AK Interactive", type: "Effect", hex: "#7FFF00", family: "Greens", notes: "Neon green" },
+            { name: "Fluorescent Magenta", brand: "AK Interactive", type: "Effect", hex: "#FF00FF", family: "Pinks", notes: "Neon pink" },
+            { name: "Fyreslayer Flesh", brand: "Citadel", type: "Contrast", hex: "#D2691E", family: "Browns", notes: "Warm flesh" },
+            { name: "Garaghak's Sewer", brand: "Citadel", type: "Contrast", hex: "#4A4A4A", family: "Blacks/Greys", notes: "Dark grey" },
+            { name: "Gorthor Brown", brand: "Citadel", type: "Layer", hex: "#3B3429", family: "Browns", notes: "Darker Brown" },
+            { name: "Gore Grunta Fur", brand: "Citadel", type: "Contrast", hex: "#331E1D", family: "Browns", notes: "Brown wash" },
+            { name: "Gryph Charger Grey", brand: "Citadel", type: "Contrast", hex: "#5A82A2", family: "Blues", notes: "Blue wash" },
+            { name: "Guilliman Flesh", brand: "Citadel", type: "Contrast", hex: "#DEB887", family: "Browns", notes: "Natural flesh" },
+            { name: "Highlight Flesh", brand: "AK Interactive", type: "Base", hex: "#FFE4C4", family: "Browns", notes: "Light flesh" },
+            { name: "Hull Red", brand: "Model Color", type: "Base", hex: "#693434", family: "Reds", notes: "Dark burgundy" },
+            { name: "Iron Hands Steel", brand: "Citadel", type: "Base", hex: "#71797E", family: "Metallics", notes: "Metallic grey" },
+            { name: "IronJawz Yellow", brand: "Citadel", type: "Contrast", hex: "#B88B09", family: "Yellow", notes: "Yellow wash" },
+            { name: "Iron Warriors", brand: "Citadel", type: "Base", hex: "#565656", family: "Metallics", notes: "Dark metallic" },
+            { name: "Karak Stone", brand: "Citadel", type: "Layer", hex: "#C4A484", family: "Browns", notes: "Neutral stone" },
+            { name: "Knight-Questor Flesh", brand: "Citadel", type: "Layer", hex: "#D2B48C", family: "Browns", notes: "Flesh tone" },
+            { name: "Lahmian Medium", brand: "Citadel", type: "Technical", hex: "Clear", family: "Technical", notes: "Mixing medium" },
+            { name: "Leadbelcher", brand: "Citadel", type: "Base", hex: "#595959", family: "Metallics", notes: "Metallic grey" },
+            { name: "Liberator Gold", brand: "Citadel", type: "Layer", hex: "#CFB53B", family: "Metallics", notes: "Bright gold" },
+            { name: "Mechanicus Standard Grey", brand: "Citadel", type: "Base", hex: "#696969", family: "Blacks/Greys", notes: "Medium grey" },
+            { name: "Medium Rust", brand: "AK Interactive", type: "Pigments", hex: "#8B4513", family: "Browns", notes: "Rust effect" },
+            { name: "Mephiston Red", brand: "Citadel", type: "Base", hex: "#DC143C", family: "Reds", notes: "Bright red base" },
+            { name: "Militarum Green", brand: "Citadel", type: "Contrast", hex: "#4B5320", family: "Greens", notes: "Military green" },
+            { name: "Moot Green", brand: "Citadel", type: "Layer", hex: "#00FF00", family: "Greens", notes: "Bright green" },
+            { name: "Morghast Bone", brand: "Citadel", type: "Base", hex: "#DEB887", family: "Browns", notes: "Bone color" },
+            { name: "NATO Green", brand: "AK Interactive", type: "Base", hex: "#4B5320", family: "Greens", notes: "Military olive" },
+            { name: "Night Lords blue", brand: "Citadel", type: "Base", hex: "#002A59", family: "Blues", notes: "Very dark blue" },
+            { name: "Nuln Oil", brand: "Citadel", type: "Shade", hex: "#1A1A1A", family: "Technical", notes: "Midnight Blue" },
+            { name: "Olive Green", brand: "Model Color", type: "Base", hex: "#556B2F", family: "Greens", notes: "Olive tone" },
+            { name: "Olvegrun", brand: "Model Color", type: "Base", hex: "#2E3429", family: "Greens", notes: "Dark Olive Grey" },
+            { name: "Pylar Glaciar", brand: "Citadel", type: "Contrast", hex: "#3A7FB3", family: "Blues", notes: "Black wash" },
+            { name: "Plaguebearer Flesh", brand: "Citadel", type: "Contrast", hex: "#DEB887", family: "Browns", notes: "Pale flesh" },
+            { name: "Rakarth Flesh", brand: "Citadel", type: "Base", hex: "#8C7D67", family: "Browns", notes: "Pale flesh" },
+            { name: "Ratling Grime", brand: "Citadel", type: "Contrast", hex: "#483C32", family: "Browns", notes: "Dirty brown" },
+            { name: "Reikland Fleshshade", brand: "Citadel", type: "Shade", hex: "#8B4513", family: "Technical", notes: "Flesh wash" },
+            { name: "Rhinox Hide", brand: "Citadel", type: "Base", hex: "#592321", family: "Browns", notes: "Deep brown" },
+            { name: "Screaming Skll", brand: "Citadel", type: "Layer", hex: "#AB9C74", family: "Whites", notes: "Skull white" },
+            { name: "Screamer Pink", brand: "Citadel", type: "Layer", hex: "#FF1493", family: "Reds", notes: "Vibrant pink-red" },
+            { name: "Seraphim Sepia", brand: "Citadel", type: "Shade", hex: "#C4A484", family: "Technical", notes: "Sepia wash" },
+            { name: "Sigvald Burgundy", brand: "Citadel", type: "Contrast", hex: "#800020", family: "Reds", notes: "Deep burgundy" },
+            { name: "Skavenblight Dinge", brand: "Citadel", type: "Layer", hex: "#3E3F3A", family: "Browns", notes: "Dull dark brown" },
+            { name: "Skrag Brown", brand: "Citadel", type: "Layer", hex: "#8B4513", family: "Browns", notes: "Warm brown" },
+            { name: "Snakebite Leather", brand: "Citadel", type: "Contrast", hex: "#8B4513", family: "Browns", notes: "Rich leather" },
+            { name: "Steel Legion Drab", brand: "Citadel", type: "Base", hex: "#967117", family: "Browns", notes: "Military brown" },
+            { name: "Stormhost Silver", brand: "Citadel", type: "Layer", hex: "#C0C0C0", family: "Metallics", notes: "Bright silver" },
+            { name: "Stormvermin Fur", brand: "Citadel", type: "Layer", hex: "#575445", family: "Browns", notes: "Greyish brown fur" },
+            { name: "Surface Primer", brand: "Vallejo", type: "Primer", hex: "Grey", family: "Technical", notes: "Grey primer" },
+            { name: "Talassar Blue", brand: "Citadel", type: "Contrast", hex: "#0000FF", family: "Blues", notes: "Bright blue" },
+            { name: "Tallarn Sand", brand: "Citadel", type: "Layer", hex: "#7A6342", family: "Yellow", notes: "Sandy color" },
+            { name: "Terminatus Stone", brand: "Citadel", type: "Dry", hex: "#E5E4E2", family: "Whites", notes: "Off-white" },
+            { name: "Thousand Sons Blue", brand: "Citadel", type: "Base", hex: "#035171", family: "Blues", notes: "Darker Blue" },
+            { name: "Tuskgor Fur", brand: "Citadel", type: "Layer", hex: "#7D4A32", family: "Browns", notes: "Browny red" },
+            { name: "Ulthuan Grey", brand: "Citadel", type: "Layer", hex: "#C8C5BA", family: "Gray", notes: "Light Gray" },
+            { name: "Ushabti Bone", brand: "Citadel", type: "Layer", hex: "#E3DAC9", family: "Browns", notes: "Light bone" },
+            { name: "Warp Lightning", brand: "Citadel", type: "Contrast", hex: "#39FF14", family: "Greens", notes: "Bright green" },
+            { name: "Wazzdakka Red", brand: "Citadel", type: "Layer", hex: "#772F36", family: "Reds", notes: "Darker Red" },
+            { name: "White Scar", brand: "Citadel", type: "Base", hex: "#FFFFFF", family: "Whites", notes: "Pure white" },
+            { name: "Wildwood", brand: "Citadel", type: "Contrast", hex: "#654321", family: "Browns", notes: "Deep brown" },
+            { name: "Wrathbone", brand: "Citadel", type: "Base", hex: "#A1957A", family: "Whites", notes: "Bone off colour white" },
+            { name: "Woodgrain", brand: "AK Interactive", type: "Base", hex: "#8B4513", family: "Browns", notes: "Wood effect" },
+        ];
+
+        function createPaintCard(paint) {
+            return `
+                <div class="paint-card">
+                    <div class="color-swatch" style="background-color: ${paint.hex}"></div>
+                    <div class="paint-info">
+                        <div class="paint-name">${paint.name}</div>
+                        <div class="paint-details">
+                            <div>Type: ${paint.type}</div>
+                            <div>Color Family: ${paint.family}</div>
+                            <div>Hex: ${paint.hex}</div>
+                            ${paint.notes ? `<div>Notes: ${paint.notes}</div>` : ''}
+                        </div>
+                        <span class="brand-tag">${paint.brand}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateFilters() {
+            const brands = [...new Set(paints.map(p => p.brand))];
+            const types = [...new Set(paints.map(p => p.type))];
+            const families = [...new Set(paints.map(p => p.family))];
+
+            const brandFilter = document.getElementById('brandFilter');
+            const typeFilter = document.getElementById('typeFilter');
+            const familyFilter = document.getElementById('familyFilter');
+
+            brands.forEach(brand => {
+                brandFilter.add(new Option(brand, brand));
+            });
+
+            types.forEach(type => {
+                typeFilter.add(new Option(type, type));
+            });
+
+            families.forEach(family => {
+                familyFilter.add(new Option(family, family));
+            });
+        }
+
+        function filterPaints() {
+            const searchTerm = document.querySelector('.search-input').value.toLowerCase();
+            const brandFilter = document.getElementById('brandFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const familyFilter = document.getElementById('familyFilter').value;
+
+            const filteredPaints = paints.filter(paint => {
+                const matchesSearch = paint.name.toLowerCase().includes(searchTerm);
+                const matchesBrand = !brandFilter || paint.brand === brandFilter;
+                const matchesType = !typeFilter || paint.type === typeFilter;
+                const matchesFamily = !familyFilter || paint.family === familyFilter;
+
+                return matchesSearch && matchesBrand && matchesType && matchesFamily;
+            });
+
+            const grid = document.getElementById('paintGrid');
+            grid.innerHTML = filteredPaints.map(createPaintCard).join('');
+        }
+
+        // Initialize
+        updateFilters();
+        filterPaints();
+
+        // Add event listeners
+        document.querySelector('.search-input').addEventListener('input', filterPaints);
+        document.getElementById('brandFilter').addEventListener('change', filterPaints);
+        document.getElementById('typeFilter').addEventListener('change', filterPaints);
+        document.getElementById('familyFilter').addEventListener('change', filterPaints);
+    </script>
+</body>
+</html>
