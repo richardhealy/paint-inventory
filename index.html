@@ -297,10 +297,15 @@
                         <span class="brand-tag">${paint.brand}</span>
                         ${!inPalette ? `
                             <button class="add-to-palette ${buttonClass}" 
-                                    onclick="togglePaintInPalette(${JSON.stringify(paint)})">
+                                    onclick="togglePaintInPalette(${JSON.stringify(paint).replace(/"/g, '&quot;')})">
                                 ${buttonText}
                             </button>
-                        ` : ''}
+                        ` : `
+                            <button class="add-to-palette remove-from-palette" 
+                                    onclick="togglePaintInPalette(${JSON.stringify(paint).replace(/"/g, '&quot;')})">
+                                Remove from Palette
+                            </button>
+                        `}
                     </div>
                 </div>
             `;
